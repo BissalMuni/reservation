@@ -1,25 +1,20 @@
 <!--
   Sync Impact Report
   ==================
-  Version change: 2.0.0 → 2.1.0 (MINOR)
-  Reason: Technology stack confirmed and expanded.
+  Version change: 2.1.0 → 2.2.0 (MINOR)
+  Reason: Technology stack changed from SQLite+Render to
+  Supabase PostgreSQL+Vercel.
 
-  Added/Updated sections:
-    - "Technology Stack" (confirmed: Next.js + SQLite + VPS + Aligo)
-    - "Spec Deferred Items" (implementation details to be defined in spec)
-
-  Templates requiring updates:
-    - .specify/templates/plan-template.md ✅ no structural change needed
-    - .specify/templates/spec-template.md ✅ no structural change needed
-    - .specify/templates/tasks-template.md ✅ no structural change needed
+  Updated sections:
+    - "Technology Stack" DB/Hosting/ORM/Scheduler 변경
+    - "아키텍처 결정" 동시성/폐기 방식 변경
 
   Follow-up TODOs:
     - QR code target URL to be determined at deployment
-    - Railway vs Render 최종 선정
 -->
 
 # 강남구 세금상담회 예약시스템 Constitution
-<!-- Version: 2.1.0 | Ratified: 2026-03-06 | Last Amended: 2026-03-06 -->
+<!-- Version: 2.2.0 | Ratified: 2026-03-06 | Last Amended: 2026-03-06 -->
 
 ## Core Principles
 
@@ -98,24 +93,25 @@ QR코드로 접속하는 모바일 사용자가 주 대상이다.
 | **Language** | TypeScript | 프론트+백엔드 단일 언어 |
 | **Framework** | Next.js 14+ (App Router) | SSR + API Routes 통합 |
 | **Styling** | Tailwind CSS | 모바일 우선 반응형 |
-| **Database** | SQLite (Prisma ORM) | WAL 모드, 단일 파일 |
+| **Database** | Supabase (PostgreSQL) | 기존 프로젝트에 테이블 추가 |
 | **SMS** | 알리고 (Aligo) REST API | 건당 ~8.4원, 소규모 최적 |
-| **Hosting** | Railway 또는 Render | SQLite 사용 가능한 VPS |
-| **Scheduler** | node-cron | 5분 전 알림 문자 발송 |
+| **Hosting** | Vercel (무료 tier) | 서버리스, 자동 배포, CDN |
+| **Scheduler** | Vercel Cron | 5분 전 알림 문자 발송 |
 
 ### 아키텍처 결정
 
 - **모놀리스**: 단일 Next.js 프로젝트 (프론트+백엔드+API)
-- **동시성 제어**: SQLite WAL 모드 + Prisma 트랜잭션
+- **동시성 제어**: PostgreSQL 트랜잭션 + Supabase RPC
 - **상태 관리**: 서버 컴포넌트 중심, 클라이언트 상태 최소화
-- **개인정보 폐기**: DB 파일 삭제로 완전 폐기 가능 (SQLite 장점)
+- **DB 접근**: Supabase JS Client (@supabase/supabase-js)
+- **개인정보 폐기**: DROP TABLE로 테이블 삭제 (기존 DB 영향 없음)
 
 ### 기술 제약
 
 - 네이티브 앱 불필요 (모바일 웹 전용)
 - 회원가입/로그인 시스템 불필요
 - 관리자 인증은 환경변수 기반 단순 비밀번호로 충분
-- 이벤트 종료 후 서버 중단 + DB 파일 삭제로 폐기 완료
+- 이벤트 종료 후 Vercel 프로젝트 삭제 + DB 테이블 DROP으로 폐기 완료
 
 ## Spec Deferred Items (스펙에서 정의할 항목)
 
@@ -149,4 +145,4 @@ QR코드로 접속하는 모바일 사용자가 주 대상이다.
 - 개인정보 관련 원칙(Principle I)은 법적 요건이므로 임의 삭제 불가.
 - 모든 구현은 이 Constitution의 Business Rules와 일치해야 한다.
 
-**Version**: 2.1.0 | **Ratified**: 2026-03-06 | **Last Amended**: 2026-03-06
+**Version**: 2.2.0 | **Ratified**: 2026-03-06 | **Last Amended**: 2026-03-06
