@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install spec-kit)",
+      "WebFetch(domain:github.com)",
+      "Bash(uv --version)",
+      "Bash(uv tool install specify-cli --from git+https://github.com/github/spec-kit.git)",
+      "Bash(specify --help)",
+      "Bash(PYTHONIOENCODING=utf-8 specify --help)",
+      "Bash(PYTHONIOENCODING=utf-8 specify init --help)",
+      "Bash(PYTHONIOENCODING=utf-8 specify init --here --ai claude --force)",
+      "Bash(curl -sL -o /tmp/spec-kit-template.zip \"https://github.com/github/spec-kit/archive/refs/heads/main.zip\" --connect-timeout 30 -w \"%{http_code}\")",
+      "Bash(chmod +x /c/Users/user/Downloads/coding/reservation/.specify/scripts/bash/*.sh)",
+      "Bash(gh auth status)"
+    ]
+  }
+}

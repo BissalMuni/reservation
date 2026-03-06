@@ -1,0 +1,152 @@
+<!--
+  Sync Impact Report
+  ==================
+  Version change: 2.0.0 → 2.1.0 (MINOR)
+  Reason: Technology stack confirmed and expanded.
+
+  Added/Updated sections:
+    - "Technology Stack" (confirmed: Next.js + SQLite + VPS + Aligo)
+    - "Spec Deferred Items" (implementation details to be defined in spec)
+
+  Templates requiring updates:
+    - .specify/templates/plan-template.md ✅ no structural change needed
+    - .specify/templates/spec-template.md ✅ no structural change needed
+    - .specify/templates/tasks-template.md ✅ no structural change needed
+
+  Follow-up TODOs:
+    - QR code target URL to be determined at deployment
+    - Railway vs Render 최종 선정
+-->
+
+# 강남구 세금상담회 예약시스템 Constitution
+<!-- Version: 2.1.0 | Ratified: 2026-03-06 | Last Amended: 2026-03-06 -->
+
+## Core Principles
+
+### I. Privacy-First Data Handling
+
+개인정보 보호를 최우선으로 한다.
+
+- 수집 항목은 이름, 전화번호로 한정하며 둘 다 필수 입력이다.
+- 개인정보 활용 목적은 **통계 및 예약정보 제공**으로만 한정한다.
+- 개인정보 활용동의를 받지 않으면 예약을 진행할 수 없다.
+- 동의 화면에 "개인정보는 수집일로부터 **1주일 이내 폐기**됩니다"를
+  반드시 고지해야 한다.
+- 시스템은 수집 후 7일이 경과한 개인정보를 자동 삭제하거나
+  관리자가 수동 폐기할 수 있는 메커니즘을 제공해야 한다.
+
+### II. Reservation Integrity (예약 무결성)
+
+예약 슬롯의 정합성을 보장하고 초과 예약을 허용하지 않는다.
+
+- 시간대별(4시, 5시) 각 **6건**까지만 예약 가능하다.
+- 각 시간대는 00분, 20분, 40분의 3개 타임으로 나뉘며,
+  각 타임에 세무사 1명이 배정된다. (시간당 3타임 × 6명 = 18건,
+  총 2시간 = 36건)
+- 슬롯이 만석이면 해당 시간대의 예약이 불가함을 즉시 안내한다.
+- 동시 접속 시 race condition을 방지하여 초과 예약을 차단해야 한다.
+- 예약 취소 시 해당 슬롯이 다시 개방되어야 한다.
+
+### III. Mobile-First Accessibility (모바일 우선 접근성)
+
+QR코드로 접속하는 모바일 사용자가 주 대상이다.
+
+- 모든 화면은 모바일 뷰포트에 최적화되어야 한다.
+- QR코드 스캔 후 즉시 예약 페이지에 도달해야 한다.
+- 복잡한 회원가입 없이 이름+전화번호만으로 예약 가능해야 한다.
+- 네트워크 환경이 불안정한 현장 상황을 고려해 가볍게 동작해야 한다.
+
+### IV. Reliable User Communication (신뢰성 있는 사용자 소통)
+
+예약 확인 및 알림을 문자(SMS)로 전달한다.
+
+- 예약 완료 시 확인 문자를 즉시 발송해야 한다.
+- 예약 시간 **5분 전** 알림 문자를 발송해야 한다.
+- 예약 취소 시 취소 확인 문자를 발송해야 한다.
+- 문자 발송 실패 시 재시도 또는 로그 기록을 해야 한다.
+
+### V. Simplicity & Event-Scoped Design (단순성 및 이벤트 한정 설계)
+
+단일 이벤트(2026.3.12 강남구 세금상담회)를 위한 최소 기능 시스템이다.
+
+- YAGNI 원칙을 따르며, 범용 예약 플랫폼을 만들지 않는다.
+- 불필요한 관리 기능, 대시보드, 분석 도구를 추가하지 않는다.
+- 필요 최소한의 기술 스택으로 구현한다.
+- 이벤트 종료 후 시스템 폐기를 전제로 설계한다.
+
+## Business Rules (사업 규칙)
+
+- **이벤트**: 현장밀착 열린 세금상담회
+- **주최**: 강남구청 / 한국세무사회
+- **장소**: 강남구민회관
+- **일시**: 2026년 3월 12일 (목)
+- **운영 시간**: 오후 4시 ~ 오후 6시 (2시간)
+- **시간대**: 오후 4시, 오후 5시
+- **타임 슬롯**: 각 시간대 내 00분 / 20분 / 40분 (상담시간 20분 이내)
+- **세무사 수**: 6명
+- **시간대당 최대 예약**: 6건 (3타임 × 2건 또는 슬롯당 유동 배분)
+- **총 상담 건수**: 36건 (6명 × 3타임 × 2시간)
+- **상담 분야**: 국세(종합소득세, 상속·증여세, 부가가치세 등),
+  지방세(취득세, 재산세), 기타
+
+## Technology Stack (확정)
+
+### 핵심 기술
+
+| 영역 | 기술 | 비고 |
+|------|------|------|
+| **Language** | TypeScript | 프론트+백엔드 단일 언어 |
+| **Framework** | Next.js 14+ (App Router) | SSR + API Routes 통합 |
+| **Styling** | Tailwind CSS | 모바일 우선 반응형 |
+| **Database** | SQLite (Prisma ORM) | WAL 모드, 단일 파일 |
+| **SMS** | 알리고 (Aligo) REST API | 건당 ~8.4원, 소규모 최적 |
+| **Hosting** | Railway 또는 Render | SQLite 사용 가능한 VPS |
+| **Scheduler** | node-cron | 5분 전 알림 문자 발송 |
+
+### 아키텍처 결정
+
+- **모놀리스**: 단일 Next.js 프로젝트 (프론트+백엔드+API)
+- **동시성 제어**: SQLite WAL 모드 + Prisma 트랜잭션
+- **상태 관리**: 서버 컴포넌트 중심, 클라이언트 상태 최소화
+- **개인정보 폐기**: DB 파일 삭제로 완전 폐기 가능 (SQLite 장점)
+
+### 기술 제약
+
+- 네이티브 앱 불필요 (모바일 웹 전용)
+- 회원가입/로그인 시스템 불필요
+- 관리자 인증은 환경변수 기반 단순 비밀번호로 충분
+- 이벤트 종료 후 서버 중단 + DB 파일 삭제로 폐기 완료
+
+## Spec Deferred Items (스펙에서 정의할 항목)
+
+아래 항목은 Constitution 수준이 아닌 구현 세부사항이므로 스펙에서 다룬다.
+
+- **DB 스키마**: 테이블 구조, 컬럼, 인덱스 정의
+- **API 엔드포인트**: 라우트 경로, 요청/응답 형식
+- **UI 페이지 흐름**: 화면 구성, 네비게이션 순서
+- **SMS 메시지 템플릿**: 예약확인/알림/취소 문자 문구
+- **QR코드 생성 방식**: 라이브러리 선택, 대상 URL
+- **개인정보 동의 화면**: 정확한 문구, 체크박스 구성
+- **관리자 화면**: 예약 현황 조회, 수동 취소 기능
+- **에러 처리**: 슬롯 만석, 네트워크 오류 등 UX 처리
+- **상담 분야 선택**: 국세/지방세/기타 UI 구현 방식
+
+## Development Workflow
+
+- `/specify` 로 기능 스펙 작성
+- `/plan` 으로 구현 계획 수립
+- `/tasks` 로 태스크 목록 생성
+- `/implement` 로 구현 실행
+- `/analyze` 로 일관성 검증
+
+## Governance
+
+이 Constitution은 프로젝트의 모든 설계·구현 의사결정에 우선한다.
+
+- 원칙 변경 시 이 문서를 먼저 수정하고 버전을 올린다.
+- 버전 관리: MAJOR(원칙 삭제/재정의), MINOR(원칙 추가/확장),
+  PATCH(문구 수정/명확화)
+- 개인정보 관련 원칙(Principle I)은 법적 요건이므로 임의 삭제 불가.
+- 모든 구현은 이 Constitution의 Business Rules와 일치해야 한다.
+
+**Version**: 2.1.0 | **Ratified**: 2026-03-06 | **Last Amended**: 2026-03-06
