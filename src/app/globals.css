@@ -9,6 +9,6 @@
 body {
   font-size: calc(1.125rem * var(--font-scale));
   line-height: 1.6;
-  background: linear-gradient(180deg, #f8fffe 0%, #fffcf8 100%);
+  background: linear-gradient(180deg, #f0f4f8 0%, #ffffff 100%);
   min-height: 100vh;
 }

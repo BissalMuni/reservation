@@ -38,3 +38,6 @@ next-env.d.ts
 Dockerfile.claude
 docker-compose.claude.yml
 .claude-output/
+
+# IDE / local settings
+.claude/settings.local.json

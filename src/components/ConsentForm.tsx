@@ -49,7 +49,7 @@ export default function ConsentForm({ onConsent }: ConsentFormProps) {
           className="h-6 w-6 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
         />
         <span className="text-dynamic-base text-gray-700 font-medium">
-          위 개인정보 수집 및 이용에 동의합니다 <span className="text-accent-500">(필수)</span>
+          위 개인정보 수집 및 이용에 동의합니다 <span className="text-red-500">(필수)</span>
         </span>
       </label>
 
