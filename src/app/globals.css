@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-scale: 1;
+}
+
+body {
+  font-size: calc(1.125rem * var(--font-scale));
+  line-height: 1.6;
+  background: linear-gradient(180deg, #f8fffe 0%, #fffcf8 100%);
+  min-height: 100vh;
+}
