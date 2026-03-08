@@ -75,7 +75,7 @@ export default function ReservationForm({
       <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 space-y-4">
         <div>
           <label htmlFor="name" className="mb-2 block text-dynamic-base font-bold text-gray-800">
-            이름 <span className="text-accent-500">*</span>
+            이름 <span className="text-red-500">*</span>
           </label>
           <input
             id="name"
@@ -93,7 +93,7 @@ export default function ReservationForm({
         {/* 전화번호 입력 */}
         <div>
           <label htmlFor="phone" className="mb-2 block text-dynamic-base font-bold text-gray-800">
-            전화번호 <span className="text-accent-500">*</span>
+            전화번호 <span className="text-red-500">*</span>
           </label>
           <input
             id="phone"

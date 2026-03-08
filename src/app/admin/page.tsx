@@ -52,8 +52,13 @@ export default function AdminPage() {
   if (!token) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="w-full max-w-sm space-y-4">
-          <h1 className="text-center text-xl font-bold text-gray-900">관리자 로그인</h1>
+        <div className="w-full max-w-sm space-y-5">
+          <div className="text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary-700 text-white text-2xl shadow-md">
+              🔒
+            </div>
+            <h1 className="text-dynamic-xl font-bold text-gray-900">관리자 로그인</h1>
+          </div>
 
           <div>
             <input
@@ -62,22 +67,23 @@ export default function AdminPage() {
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               placeholder="비밀번호 입력"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-base
-                focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500
-                min-h-[48px]"
+              className="w-full rounded-xl border-2 border-gray-200 px-4 py-3 text-dynamic-base
+                focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200
+                min-h-[52px] transition-colors"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+            <div className="rounded-xl bg-red-50 border border-red-200 p-3 text-dynamic-sm text-red-700">{error}</div>
           )}
 
           <button
             onClick={handleLogin}
             disabled={isLoggingIn}
-            className="w-full rounded-lg bg-blue-600 py-3 text-center text-white font-semibold
-              transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed
-              hover:bg-blue-700 active:bg-blue-800 min-h-[48px]"
+            className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 py-3 text-center
+              text-white text-dynamic-base font-bold shadow-md
+              transition-all disabled:from-gray-300 disabled:to-gray-300 disabled:cursor-not-allowed
+              hover:from-primary-700 hover:to-primary-800 active:scale-[0.98] min-h-[52px]"
           >
             {isLoggingIn ? '로그인 중...' : '로그인'}
           </button>
