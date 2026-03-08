@@ -1,20 +1,25 @@
 <!--
   Sync Impact Report
   ==================
-  Version change: 2.1.0 → 2.2.0 (MINOR)
-  Reason: Technology stack changed from SQLite+Render to
-  Supabase PostgreSQL+Vercel.
+  Version change: 2.2.0 → 2.2.1 (PATCH)
+  Reason: 예약 숫자 모순 수정 + 커맨드 이름 업데이트
 
-  Updated sections:
-    - "Technology Stack" DB/Hosting/ORM/Scheduler 변경
-    - "아키텍처 결정" 동시성/폐기 방식 변경
+  Modified sections:
+    - Principle II: 시간대당 예약 건수 6→18, 세무사 배정 1명→6명 수정
+    - Business Rules: 시간대당 최대 예약 6건→18건 수정
+    - Development Workflow: 커맨드 이름 /speckit.* 형태로 변경
+
+  Templates requiring updates:
+    - plan-template.md ✅ (변경 불필요, Constitution Check 정상)
+    - spec-template.md ✅ (변경 불필요, 제네릭 템플릿)
+    - tasks-template.md ✅ (변경 불필요, 제네릭 템플릿)
 
   Follow-up TODOs:
     - QR code target URL to be determined at deployment
 -->
 
 # 강남구 세금상담회 예약시스템 Constitution
-<!-- Version: 2.2.0 | Ratified: 2026-03-06 | Last Amended: 2026-03-06 -->
+<!-- Version: 2.2.1 | Ratified: 2026-03-06 | Last Amended: 2026-03-06 -->
 
 ## Core Principles
 
@@ -34,9 +39,9 @@
 
 예약 슬롯의 정합성을 보장하고 초과 예약을 허용하지 않는다.
 
-- 시간대별(4시, 5시) 각 **6건**까지만 예약 가능하다.
+- 시간대별(4시, 5시) 각 **18건**까지만 예약 가능하다.
 - 각 시간대는 00분, 20분, 40분의 3개 타임으로 나뉘며,
-  각 타임에 세무사 1명이 배정된다. (시간당 3타임 × 6명 = 18건,
+  각 타임에 세무사 6명이 동시 상담한다. (타임당 6건 × 3타임 = 18건/시간대,
   총 2시간 = 36건)
 - 슬롯이 만석이면 해당 시간대의 예약이 불가함을 즉시 안내한다.
 - 동시 접속 시 race condition을 방지하여 초과 예약을 차단해야 한다.
@@ -79,7 +84,7 @@ QR코드로 접속하는 모바일 사용자가 주 대상이다.
 - **시간대**: 오후 4시, 오후 5시
 - **타임 슬롯**: 각 시간대 내 00분 / 20분 / 40분 (상담시간 20분 이내)
 - **세무사 수**: 6명
-- **시간대당 최대 예약**: 6건 (3타임 × 2건 또는 슬롯당 유동 배분)
+- **시간대당 최대 예약**: 18건 (3타임 × 6건/타임)
 - **총 상담 건수**: 36건 (6명 × 3타임 × 2시간)
 - **상담 분야**: 국세(종합소득세, 상속·증여세, 부가가치세 등),
   지방세(취득세, 재산세), 기타
@@ -129,11 +134,11 @@ QR코드로 접속하는 모바일 사용자가 주 대상이다.
 
 ## Development Workflow
 
-- `/specify` 로 기능 스펙 작성
-- `/plan` 으로 구현 계획 수립
-- `/tasks` 로 태스크 목록 생성
-- `/implement` 로 구현 실행
-- `/analyze` 로 일관성 검증
+- `/speckit.specify` 로 기능 스펙 작성
+- `/speckit.plan` 으로 구현 계획 수립
+- `/speckit.tasks` 로 태스크 목록 생성
+- `/speckit.implement` 로 구현 실행
+- `/speckit.analyze` 로 일관성 검증
 
 ## Governance
 
@@ -145,4 +150,4 @@ QR코드로 접속하는 모바일 사용자가 주 대상이다.
 - 개인정보 관련 원칙(Principle I)은 법적 요건이므로 임의 삭제 불가.
 - 모든 구현은 이 Constitution의 Business Rules와 일치해야 한다.
 
-**Version**: 2.2.0 | **Ratified**: 2026-03-06 | **Last Amended**: 2026-03-06
+**Version**: 2.2.1 | **Ratified**: 2026-03-06 | **Last Amended**: 2026-03-06
