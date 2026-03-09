@@ -254,9 +254,15 @@ function Header() {
       {/* 로고 영역 */}
       <div className="bg-white px-5 py-3">
         <div className="flex items-center justify-center gap-4">
-          <img src="/images/logo_gangnam.png" alt="강남구" className="h-10 w-auto" />
+          <div className="flex items-center gap-2">
+            <img src="/images/logo_gangnam.png" alt="강남구" className="h-10 w-auto" />
+            <span className="text-dynamic-sm font-bold text-gray-700">강남구</span>
+          </div>
           <div className="h-8 w-px bg-gray-200" />
-          <img src="/images/logo_semusa.gif" alt="한국세무사회" className="h-9 w-auto" />
+          <div className="flex items-center gap-2">
+            <img src="/images/logo_semusa.gif" alt="한국세무사회" className="h-9 w-auto" />
+            <span className="text-dynamic-sm font-bold text-gray-700">한국세무사회</span>
+          </div>
         </div>
       </div>
       {/* 타이틀 영역 */}
