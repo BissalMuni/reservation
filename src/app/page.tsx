@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ConsentForm from '@/components/ConsentForm';
 import SlotSelector from '@/components/SlotSelector';
 import ReservationForm from '@/components/ReservationForm';
@@ -34,6 +34,17 @@ export default function ReservationPage() {
     category: string;
     reservationId: string;
   } | null>(null);
+
+  // 스텝 전환 시 자동 스크롤
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (step !== 'consent') {
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [step]);
 
   // 이벤트 종료 체크
   const isEventExpired = new Date() > new Date(EVENT_INFO.date + 'T23:59:59+09:00');
@@ -175,6 +186,7 @@ export default function ReservationPage() {
       )}
 
       {/* 단계별 렌더링 */}
+      <div ref={contentRef} />
       {step === 'consent' && (
         <ConsentForm onConsent={() => setStep('slot')} />
       )}
@@ -238,15 +250,29 @@ export default function ReservationPage() {
 // 헤더 컴포넌트
 function Header() {
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 p-5 text-white shadow-lg">
-      <div className="text-center">
-        <p className="text-primary-200 text-dynamic-sm font-medium mb-1">강남구청 · 한국세무사회</p>
-        <h1 className="text-dynamic-xl font-bold mb-2">🏛️ 세금상담회 예약</h1>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-dynamic-sm text-primary-100">
-          <span>📍 {EVENT_INFO.location}</span>
-          <span>📅 3월 12일(목)</span>
-          <span>🕓 4PM~6PM</span>
+    <div className="overflow-hidden rounded-2xl shadow-lg">
+      {/* 로고 영역 */}
+      <div className="bg-white px-5 py-3">
+        <div className="flex items-center justify-center gap-4">
+          <img src="/images/logo_gangnam.png" alt="강남구" className="h-10 w-auto" />
+          <div className="h-8 w-px bg-gray-200" />
+          <img src="/images/logo_semusa.gif" alt="한국세무사회" className="h-9 w-auto" />
         </div>
+      </div>
+      {/* 타이틀 영역 */}
+      <div className="bg-gradient-to-br from-primary-600 to-primary-700 px-5 py-4 text-white">
+        <div className="text-center">
+          <h1 className="text-dynamic-xl font-bold mb-2">세금상담회 예약</h1>
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-dynamic-sm text-primary-100">
+            <span>📍 {EVENT_INFO.location}</span>
+            <span>📅 3월 12일(목)</span>
+            <span>🕓 4PM~6PM</span>
+          </div>
+        </div>
+      </div>
+      {/* 슬로건 */}
+      <div className="bg-white px-5 py-2">
+        <img src="/images/GN_Slogan_Basic.png" alt="꿈이 모이는 도시 미래를 그리는 강남" className="mx-auto h-8 w-auto" />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { HOUR_LABELS, MINUTE_LABELS, CONSULTATION_TYPES, CONSULTATION_DESCRIPTIONS } from '@/lib/constants';
 import type { SlotAvailability, ConsultCategory } from '@/types';
 
@@ -38,6 +39,38 @@ export default function SlotSelector({
   };
 
   const canProceed = selectedHour !== null && selectedMinute !== null && selectedCategory !== null;
+
+  // 자동 스크롤용 ref
+  const minuteRef = useRef<HTMLDivElement>(null);
+  const categoryRef = useRef<HTMLDivElement>(null);
+  const nextBtnRef = useRef<HTMLButtonElement>(null);
+
+  // 시간대 선택 시 세부 시간으로 스크롤
+  useEffect(() => {
+    if (selectedHour !== null) {
+      setTimeout(() => {
+        minuteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedHour]);
+
+  // 세부 시간 선택 시 상담 분야로 스크롤
+  useEffect(() => {
+    if (selectedMinute !== null) {
+      setTimeout(() => {
+        categoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedMinute]);
+
+  // 상담 분야 선택 시 다음 버튼으로 스크롤
+  useEffect(() => {
+    if (selectedCategory !== null) {
+      setTimeout(() => {
+        nextBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [selectedCategory]);
 
   return (
     <div className="space-y-5">
@@ -80,7 +113,7 @@ export default function SlotSelector({
 
       {/* 세부 타임 선택 */}
       {selectedHour !== null && (
-        <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
+        <div ref={minuteRef} className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
           <h3 className="mb-4 text-dynamic-lg font-bold text-gray-900 flex items-center gap-2">
             ⏰ 세부 시간 선택
           </h3>
@@ -118,7 +151,7 @@ export default function SlotSelector({
 
       {/* 상담 분야 선택 */}
       {selectedMinute !== null && (
-        <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
+        <div ref={categoryRef} className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
           <h3 className="mb-4 text-dynamic-lg font-bold text-gray-900 flex items-center gap-2">
             📋 상담 분야 선택
           </h3>
@@ -151,6 +184,7 @@ export default function SlotSelector({
       {/* 다음 단계 버튼 */}
       {canProceed && (
         <button
+          ref={nextBtnRef}
           onClick={onNext}
           className="w-full rounded-xl bg-gradient-to-r from-primary-500 to-primary-600 py-4 text-center
             text-white text-dynamic-lg font-bold
