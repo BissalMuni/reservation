@@ -17,6 +17,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
   const [purging, setPurging] = useState(false);
+  const [slotFilter, setSlotFilter] = useState<string | null>(null);
 
   // 예약 목록 로드
   const fetchReservations = useCallback(async () => {
@@ -109,6 +110,14 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const { reservations, summary } = data;
   const activeReservations = reservations.filter((r) => r.status === 'active');
 
+  // 시간대 필터링
+  const filteredReservations = slotFilter
+    ? reservations.filter((r) => {
+        const [h, m] = slotFilter.split('-').map(Number);
+        return r.hourSlot === h && r.minuteSlot === m;
+      })
+    : reservations;
+
   return (
     <div className="space-y-5">
       {/* 헤더 */}
@@ -143,22 +152,27 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
               const isFull = count >= max;
               const ratio = count / max;
 
+              const filterKey = `${hour}-${minute}`;
+              const isFilterActive = slotFilter === filterKey;
+
               return (
-                <div
-                  key={`${hour}-${minute}`}
-                  className={`rounded-xl border-2 p-3 text-center
-                    ${isFull ? 'border-red-300 bg-red-50' :
+                <button
+                  key={filterKey}
+                  onClick={() => setSlotFilter(isFilterActive ? null : filterKey)}
+                  className={`rounded-xl border-2 p-3 text-center transition-all cursor-pointer
+                    ${isFilterActive ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50 scale-[1.05]' :
+                      isFull ? 'border-red-300 bg-red-50' :
                       ratio > 0.5 ? 'border-accent-200 bg-accent-50' :
-                      'border-gray-200 bg-white'}
+                      'border-gray-200 bg-white hover:border-primary-300'}
                   `}
                 >
                   <div className="text-dynamic-sm font-bold">{formatTimeSlot(hour, minute)}</div>
                   <div className={`text-dynamic-lg font-bold mt-1
-                    ${isFull ? 'text-red-600' : ratio > 0.5 ? 'text-accent-600' : 'text-primary-600'}
+                    ${isFilterActive ? 'text-primary-700' : isFull ? 'text-red-600' : ratio > 0.5 ? 'text-accent-600' : 'text-primary-600'}
                   `}>
                     {count}/{max}
                   </div>
-                </div>
+                </button>
               );
             })
           )}
@@ -167,14 +181,27 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
 
       {/* 예약 목록 */}
       <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-        <h3 className="mb-3 text-dynamic-lg font-bold text-gray-900">
-          📋 예약 목록 ({reservations.length}건)
-        </h3>
-        {reservations.length === 0 ? (
-          <p className="text-center text-dynamic-base text-gray-400 py-8">예약이 없습니다.</p>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-dynamic-lg font-bold text-gray-900">
+            📋 예약 목록 ({filteredReservations.length}건)
+          </h3>
+          {slotFilter && (
+            <button
+              onClick={() => setSlotFilter(null)}
+              className="rounded-lg bg-primary-50 px-3 py-1 text-dynamic-xs text-primary-700 font-bold
+                hover:bg-primary-100 transition-colors"
+            >
+              {formatTimeSlot(parseInt(slotFilter.split('-')[0]), parseInt(slotFilter.split('-')[1]))} ✕
+            </button>
+          )}
+        </div>
+        {filteredReservations.length === 0 ? (
+          <p className="text-center text-dynamic-base text-gray-400 py-8">
+            {slotFilter ? '해당 시간대에 예약이 없습니다.' : '예약이 없습니다.'}
+          </p>
         ) : (
           <div className="space-y-2">
-            {reservations.map((r) => (
+            {filteredReservations.map((r) => (
               <div
                 key={r.id}
                 className={`flex items-center justify-between rounded-xl border p-4
