@@ -77,18 +77,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 예약 확인 SMS 발송 (비동기 fire-and-forget)
-    sendSms({
-      receiver: normalizedPhone,
-      message: confirmationMessage({
-        name: name.trim(),
-        hourSlot,
-        minuteSlot,
-        category,
-      }),
-      reservationId: result.reservation_id,
-      messageType: 'confirmation',
-    }).catch((err) => console.error('확인 SMS 발송 실패:', err));
+    // 예약 확인 SMS 발송
+    try {
+      await sendSms({
+        receiver: normalizedPhone,
+        message: confirmationMessage({
+          name: name.trim(),
+          hourSlot,
+          minuteSlot,
+          category,
+        }),
+        reservationId: result.reservation_id,
+        messageType: 'confirmation',
+      });
+    } catch (err) {
+      console.error('확인 SMS 발송 실패:', err);
+    }
 
     return NextResponse.json(
       {
@@ -204,19 +208,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // 취소 확인 SMS 발송 (비동기)
+    // 취소 확인 SMS 발송
     if (existingReservation) {
-      sendSms({
-        receiver: normalizedPhone,
-        message: cancellationMessage({
-          name: name.trim(),
-          hourSlot: existingReservation.hour_slot,
-          minuteSlot: existingReservation.minute_slot,
-          category: existingReservation.category,
-        }),
-        reservationId: existingReservation.id,
-        messageType: 'cancellation',
-      }).catch((err) => console.error('취소 SMS 발송 실패:', err));
+      try {
+        await sendSms({
+          receiver: normalizedPhone,
+          message: cancellationMessage({
+            name: name.trim(),
+            hourSlot: existingReservation.hour_slot,
+            minuteSlot: existingReservation.minute_slot,
+            category: existingReservation.category,
+          }),
+          reservationId: existingReservation.id,
+          messageType: 'cancellation',
+        });
+      } catch (err) {
+        console.error('취소 SMS 발송 실패:', err);
+      }
     }
 
     return NextResponse.json({

@@ -52,19 +52,23 @@ export async function DELETE(
       );
     }
 
-    // 취소 SMS 발송 (비동기)
+    // 취소 SMS 발송
     if (reservation) {
-      sendSms({
-        receiver: reservation.phone,
-        message: cancellationMessage({
-          name: reservation.name,
-          hourSlot: reservation.hour_slot,
-          minuteSlot: reservation.minute_slot,
-          category: reservation.category,
-        }),
-        reservationId: reservation.id,
-        messageType: 'cancellation',
-      }).catch((err) => console.error('취소 SMS 발송 실패:', err));
+      try {
+        await sendSms({
+          receiver: reservation.phone,
+          message: cancellationMessage({
+            name: reservation.name,
+            hourSlot: reservation.hour_slot,
+            minuteSlot: reservation.minute_slot,
+            category: reservation.category,
+          }),
+          reservationId: reservation.id,
+          messageType: 'cancellation',
+        });
+      } catch (err) {
+        console.error('취소 SMS 발송 실패:', err);
+      }
     }
 
     return NextResponse.json({
