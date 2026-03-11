@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { verifyAdminAuth } from '@/lib/admin-auth';
-import { sendSms } from '@/lib/aligo';
+import { sendSms } from '@/lib/sms';
 import { cancellationMessage } from '@/lib/sms-templates';
 import type { RpcResponse } from '@/types';
 
