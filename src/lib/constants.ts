@@ -12,9 +12,9 @@ export const EVENT_INFO = {
 export const SLOT_CONFIG = {
   hourSlots: [16, 17] as const,         // 오후 4시, 오후 5시
   minuteSlots: [0, 20, 40] as const,    // 00분, 20분, 40분
-  maxPerSubtime: 6,                      // 타임당 최대 예약 건수
+  maxPerSubtime: 5,                      // 타임당 최대 예약 건수
   totalSlots: 6,                         // 총 슬롯 수 (2시간대 × 3타임)
-  totalCapacity: 36,                     // 총 예약 가능 건수
+  totalCapacity: 30,                     // 총 예약 가능 건수
 } as const;
 
 // 시간대 표시 레이블

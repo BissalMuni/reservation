@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS time_slots (
   hour_slot INTEGER NOT NULL CHECK (hour_slot IN (16, 17)),
   minute_slot INTEGER NOT NULL CHECK (minute_slot IN (0, 20, 40)),
   current_count INTEGER NOT NULL DEFAULT 0,
-  max_count INTEGER NOT NULL DEFAULT 6,
+  max_count INTEGER NOT NULL DEFAULT 5,
   UNIQUE (hour_slot, minute_slot)
 );
 
@@ -55,10 +55,10 @@ CREATE INDEX IF NOT EXISTS idx_sms_logs_status_retry
 
 -- 초기 슬롯 데이터 (6개)
 INSERT INTO time_slots (hour_slot, minute_slot, max_count) VALUES
-  (16, 0, 6),
-  (16, 20, 6),
-  (16, 40, 6),
-  (17, 0, 6),
-  (17, 20, 6),
-  (17, 40, 6)
+  (16, 0, 5),
+  (16, 20, 5),
+  (16, 40, 5),
+  (17, 0, 5),
+  (17, 20, 5),
+  (17, 40, 5)
 ON CONFLICT (hour_slot, minute_slot) DO NOTHING;

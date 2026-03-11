@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import { PHONE_REGEX, normalizePhone } from '@/lib/constants';
-import { sendSms } from '@/lib/aligo';
+import { sendSms } from '@/lib/sms';
 import { confirmationMessage, cancellationMessage } from '@/lib/sms-templates';
 import type { CreateReservationRequest, RpcResponse } from '@/types';
 

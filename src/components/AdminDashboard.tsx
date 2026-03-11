@@ -17,6 +17,9 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [showPurgeConfirm, setShowPurgeConfirm] = useState(false);
   const [purging, setPurging] = useState(false);
+  const [slotFilter, setSlotFilter] = useState<string | null>(null);
+  const [sendingSlot, setSendingSlot] = useState<string | null>(null);
+  const [slotSmsResult, setSlotSmsResult] = useState<Record<string, string>>({});
 
   // 예약 목록 로드
   const fetchReservations = useCallback(async () => {
@@ -92,6 +95,45 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
     }
   };
 
+  // 시간대별 알림 문자 발송
+  const handleSendReminder = async (hourSlot: number, minuteSlot: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const slotKey = `${hourSlot}-${minuteSlot}`;
+    setSendingSlot(slotKey);
+    setSlotSmsResult((prev) => ({ ...prev, [slotKey]: '' }));
+
+    try {
+      const res = await fetch('/api/admin/send-reminders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ hourSlot, minuteSlot }),
+      });
+
+      if (res.status === 401) {
+        onLogout();
+        return;
+      }
+
+      const json = await res.json();
+      if (json.success) {
+        const parts: string[] = [];
+        if (json.sent > 0) parts.push(`${json.sent}건 발송`);
+        if (json.alreadySent > 0) parts.push(`${json.alreadySent}건 기발송`);
+        if (json.failed > 0) parts.push(`${json.failed}건 실패`);
+        setSlotSmsResult((prev) => ({ ...prev, [slotKey]: parts.join(', ') || '대상 없음' }));
+      } else {
+        setSlotSmsResult((prev) => ({ ...prev, [slotKey]: json.message || '발송 실패' }));
+      }
+    } catch {
+      setSlotSmsResult((prev) => ({ ...prev, [slotKey]: '오류 발생' }));
+    } finally {
+      setSendingSlot(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -108,6 +150,14 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
 
   const { reservations, summary } = data;
   const activeReservations = reservations.filter((r) => r.status === 'active');
+
+  // 시간대 필터링
+  const filteredReservations = slotFilter
+    ? reservations.filter((r) => {
+        const [h, m] = slotFilter.split('-').map(Number);
+        return r.hourSlot === h && r.minuteSlot === m;
+      })
+    : reservations;
 
   return (
     <div className="space-y-5">
@@ -143,21 +193,46 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
               const isFull = count >= max;
               const ratio = count / max;
 
+              const filterKey = `${hour}-${minute}`;
+              const isFilterActive = slotFilter === filterKey;
+
+              const isSending = sendingSlot === filterKey;
+              const smsResult = slotSmsResult[filterKey];
+
               return (
                 <div
-                  key={`${hour}-${minute}`}
-                  className={`rounded-xl border-2 p-3 text-center
-                    ${isFull ? 'border-red-300 bg-red-50' :
+                  key={filterKey}
+                  className={`rounded-xl border-2 p-3 text-center transition-all
+                    ${isFilterActive ? 'ring-2 ring-primary-500 border-primary-500 bg-primary-50 scale-[1.05]' :
+                      isFull ? 'border-red-300 bg-red-50' :
                       ratio > 0.5 ? 'border-accent-200 bg-accent-50' :
                       'border-gray-200 bg-white'}
                   `}
                 >
-                  <div className="text-dynamic-sm font-bold">{formatTimeSlot(hour, minute)}</div>
-                  <div className={`text-dynamic-lg font-bold mt-1
-                    ${isFull ? 'text-red-600' : ratio > 0.5 ? 'text-accent-600' : 'text-primary-600'}
-                  `}>
-                    {count}/{max}
-                  </div>
+                  <button
+                    onClick={() => setSlotFilter(isFilterActive ? null : filterKey)}
+                    className="w-full cursor-pointer"
+                  >
+                    <div className="text-dynamic-sm font-bold">{formatTimeSlot(hour, minute)}</div>
+                    <div className={`text-dynamic-lg font-bold mt-1
+                      ${isFilterActive ? 'text-primary-700' : isFull ? 'text-red-600' : ratio > 0.5 ? 'text-accent-600' : 'text-primary-600'}
+                    `}>
+                      {count}/{max}
+                    </div>
+                  </button>
+                  {count > 0 && (
+                    <button
+                      onClick={(e) => handleSendReminder(hour, minute, e)}
+                      disabled={isSending}
+                      className="mt-2 w-full rounded-lg bg-blue-500 px-2 py-1.5 text-xs text-white font-bold
+                        hover:bg-blue-600 disabled:bg-gray-300 transition-colors"
+                    >
+                      {isSending ? '발송중...' : '알림 발송'}
+                    </button>
+                  )}
+                  {smsResult && (
+                    <div className="mt-1 text-[10px] text-gray-500 leading-tight">{smsResult}</div>
+                  )}
                 </div>
               );
             })
@@ -167,14 +242,27 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
 
       {/* 예약 목록 */}
       <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-        <h3 className="mb-3 text-dynamic-lg font-bold text-gray-900">
-          📋 예약 목록 ({reservations.length}건)
-        </h3>
-        {reservations.length === 0 ? (
-          <p className="text-center text-dynamic-base text-gray-400 py-8">예약이 없습니다.</p>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-dynamic-lg font-bold text-gray-900">
+            📋 예약 목록 ({filteredReservations.length}건)
+          </h3>
+          {slotFilter && (
+            <button
+              onClick={() => setSlotFilter(null)}
+              className="rounded-lg bg-primary-50 px-3 py-1 text-dynamic-xs text-primary-700 font-bold
+                hover:bg-primary-100 transition-colors"
+            >
+              {formatTimeSlot(parseInt(slotFilter.split('-')[0]), parseInt(slotFilter.split('-')[1]))} ✕
+            </button>
+          )}
+        </div>
+        {filteredReservations.length === 0 ? (
+          <p className="text-center text-dynamic-base text-gray-400 py-8">
+            {slotFilter ? '해당 시간대에 예약이 없습니다.' : '예약이 없습니다.'}
+          </p>
         ) : (
           <div className="space-y-2">
-            {reservations.map((r) => (
+            {filteredReservations.map((r) => (
               <div
                 key={r.id}
                 className={`flex items-center justify-between rounded-xl border p-4

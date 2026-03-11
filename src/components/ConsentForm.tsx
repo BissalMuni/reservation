@@ -65,6 +65,16 @@ export default function ConsentForm({ onConsent }: ConsentFormProps) {
       >
         동의하고 예약하기
       </button>
+
+      {/* 예약 취소 버튼 */}
+      <a
+        href="/cancel"
+        className="block w-full rounded-xl border-2 border-gray-200 bg-white py-3 text-center
+          text-dynamic-sm text-gray-500 font-medium transition-colors hover:bg-gray-50
+          hover:border-gray-300 min-h-[48px] leading-[calc(48px-1.5rem)]"
+      >
+        이미 예약하셨나요? 예약 취소하기
+      </a>
     </div>
   );
 }
