@@ -4,6 +4,13 @@ import type { SlotAvailability, SlotsResponse } from '@/types';
 
 // 캐싱 비활성화 — 항상 최신 DB 데이터 반환
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'CDN-Cache-Control': 'no-store',
+  'Vercel-CDN-Cache-Control': 'no-store',
+};
 
 // 슬롯 현황 조회 API
 export async function GET() {
@@ -61,11 +68,11 @@ export async function GET() {
       totalCapacity,
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: NO_CACHE_HEADERS });
   } catch {
     return NextResponse.json(
       { success: false, error: 'SERVER_ERROR', message: '서버 오류' },
-      { status: 500 }
+      { status: 500, headers: NO_CACHE_HEADERS }
     );
   }
 }
