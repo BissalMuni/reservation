@@ -20,6 +20,7 @@ export default function ReservationPage() {
   const [slots, setSlots] = useState<SlotAvailability[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [totalCapacity, setTotalCapacity] = useState(SLOT_CONFIG.totalCapacity);
 
   // 선택 상태
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
@@ -50,26 +51,36 @@ export default function ReservationPage() {
   const isEventExpired = new Date() > new Date(EVENT_INFO.date + 'T23:59:59+09:00');
 
   // 슬롯 데이터 로드
+  const initialLoadDone = useRef(false);
   const fetchSlots = useCallback(async () => {
     try {
-      setLoading(true);
+      if (!initialLoadDone.current) setLoading(true);
       const res = await fetch('/api/reservation/slots');
       const data = await res.json();
       setSlots(data.slots || []);
+      if (data.totalCapacity) setTotalCapacity(data.totalCapacity);
 
-      if (data.totalReserved >= SLOT_CONFIG.totalCapacity) {
+      if (data.totalReserved >= (data.totalCapacity || SLOT_CONFIG.totalCapacity)) {
         setError('현재 모든 시간대가 만석입니다.');
+      } else {
+        setError('');
       }
     } catch {
-      setError('슬롯 정보를 불러오는데 실패했습니다.');
+      if (!initialLoadDone.current) {
+        setError('슬롯 정보를 불러오는데 실패했습니다.');
+      }
     } finally {
       setLoading(false);
+      initialLoadDone.current = true;
     }
   }, []);
 
   useEffect(() => {
     if (!isEventExpired) {
       fetchSlots();
+      // 15초마다 슬롯 현황 갱신
+      const interval = setInterval(fetchSlots, 15000);
+      return () => clearInterval(interval);
     } else {
       setLoading(false);
     }
@@ -77,7 +88,7 @@ export default function ReservationPage() {
 
   // 잔여 수량 계산
   const totalReserved = slots.reduce((sum, s) => sum + s.currentCount, 0);
-  const totalRemaining = SLOT_CONFIG.totalCapacity - totalReserved;
+  const totalRemaining = totalCapacity - totalReserved;
 
   // 이벤트 종료 시 표시
   if (isEventExpired) {
@@ -106,11 +117,11 @@ export default function ReservationPage() {
   }
 
   // 전체 만석
-  if (totalReserved >= SLOT_CONFIG.totalCapacity && step === 'consent') {
+  if (totalReserved >= totalCapacity && step === 'consent') {
     return (
       <div className="space-y-6">
         <Header />
-        <RemainingBadge remaining={0} total={SLOT_CONFIG.totalCapacity} />
+        <RemainingBadge remaining={0} total={totalCapacity} />
         <div className="rounded-2xl bg-accent-50 p-6 text-center shadow-sm">
           <div className="mb-2 text-4xl">😔</div>
           <h2 className="mb-2 text-dynamic-lg font-bold text-accent-700">전체 만석</h2>
@@ -172,7 +183,7 @@ export default function ReservationPage() {
 
       {/* 잔여 수량 뱃지 */}
       {step !== 'complete' && (
-        <RemainingBadge remaining={totalRemaining} total={SLOT_CONFIG.totalCapacity} />
+        <RemainingBadge remaining={totalRemaining} total={totalCapacity} />
       )}
 
       {/* 스텝 인디케이터 */}
