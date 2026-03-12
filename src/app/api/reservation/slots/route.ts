@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
 import type { SlotAvailability, SlotsResponse } from '@/types';
 
+// 캐싱 비활성화 — 항상 최신 DB 데이터 반환
+export const dynamic = 'force-dynamic';
+
 // 슬롯 현황 조회 API
 export async function GET() {
   try {
