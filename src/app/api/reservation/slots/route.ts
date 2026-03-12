@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
-import { SLOT_CONFIG } from '@/lib/constants';
 import type { SlotAvailability, SlotsResponse } from '@/types';
 
 // 슬롯 현황 조회 API
@@ -48,12 +47,15 @@ export async function GET() {
       };
     });
 
-    const totalReserved = slots.reduce((sum, s) => sum + s.currentCount, 0);
+    // 실제 활성 예약 수 (슬롯 매핑과 무관하게 전체 카운트)
+    const totalReserved = activeReservations.length;
+    // DB 기반 총 정원
+    const totalCapacity = (slotsResult.data || []).reduce((sum, s) => sum + s.max_count, 0);
 
     const response: SlotsResponse = {
       slots,
       totalReserved,
-      totalCapacity: SLOT_CONFIG.totalCapacity,
+      totalCapacity,
     };
 
     return NextResponse.json(response);
