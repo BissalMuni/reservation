@@ -55,7 +55,7 @@ export default function ReservationPage() {
   const fetchSlots = useCallback(async () => {
     try {
       if (!initialLoadDone.current) setLoading(true);
-      const res = await fetch('/api/reservation/slots');
+      const res = await fetch('/api/reservation/slots', { cache: 'no-store' });
       const data = await res.json();
       setSlots(data.slots || []);
       if (data.totalCapacity) setTotalCapacity(data.totalCapacity);
