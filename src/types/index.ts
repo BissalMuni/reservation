@@ -22,6 +22,9 @@ export type ConsultCategory = '국세' | '지방세' | '기타';
 // 예약 상태
 export type ReservationStatus = 'active' | 'cancelled';
 
+// 상담 상태
+export type ConsultStatus = '대기중' | '상담중' | '상담종료';
+
 // 예약 타입
 export interface Reservation {
   id: string;
@@ -31,6 +34,7 @@ export interface Reservation {
   minuteSlot: number;
   category: ConsultCategory;
   status: ReservationStatus;
+  consultStatus: ConsultStatus;
   createdAt: string;
 }
 

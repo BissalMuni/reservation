@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { formatTimeSlot, formatPhone, SLOT_CONFIG } from '@/lib/constants';
-import type { Reservation, AdminReservationsResponse } from '@/types';
+import type { Reservation, AdminReservationsResponse, ConsultStatus } from '@/types';
 
 interface AdminDashboardProps {
   token: string;
@@ -20,6 +20,7 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
   const [slotFilter, setSlotFilter] = useState<string | null>(null);
   const [sendingSlot, setSendingSlot] = useState<string | null>(null);
   const [slotSmsResult, setSlotSmsResult] = useState<Record<string, string>>({});
+  const [updatingConsultId, setUpdatingConsultId] = useState<string | null>(null);
 
   // 예약 목록 로드
   const fetchReservations = useCallback(async () => {
@@ -131,6 +132,48 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
       setSlotSmsResult((prev) => ({ ...prev, [slotKey]: '오류 발생' }));
     } finally {
       setSendingSlot(null);
+    }
+  };
+
+  // 상담 상태 변경
+  const handleConsultStatus = async (reservation: Reservation, newStatus: ConsultStatus) => {
+    if (reservation.consultStatus === newStatus) return;
+
+    setUpdatingConsultId(reservation.id);
+    try {
+      const res = await fetch(`/api/admin/reservations/${reservation.id}/consult-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ consultStatus: newStatus }),
+      });
+
+      if (res.status === 401) {
+        onLogout();
+        return;
+      }
+
+      const json = await res.json();
+      if (json.success) {
+        // 낙관적 UI 업데이트
+        setData((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            reservations: prev.reservations.map((r) =>
+              r.id === reservation.id ? { ...r, consultStatus: newStatus } : r
+            ),
+          };
+        });
+      } else {
+        alert(json.message || '상태 변경에 실패했습니다.');
+      }
+    } catch {
+      alert('상태 변경 중 오류가 발생했습니다.');
+    } finally {
+      setUpdatingConsultId(null);
     }
   };
 
@@ -265,36 +308,67 @@ export default function AdminDashboard({ token, onLogout }: AdminDashboardProps)
             {filteredReservations.map((r) => (
               <div
                 key={r.id}
-                className={`flex items-center justify-between rounded-xl border p-4
+                className={`rounded-xl border p-4
                   ${r.status === 'cancelled'
                     ? 'border-gray-100 bg-gray-50 opacity-50'
                     : 'border-gray-200 bg-white'}
                 `}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-dynamic-base font-bold">{r.name}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-bold
-                      ${r.status === 'active'
-                        ? 'bg-primary-100 text-primary-700'
-                        : 'bg-gray-200 text-gray-500'}
-                    `}>
-                      {r.status === 'active' ? '활성' : '취소'}
-                    </span>
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-dynamic-base font-bold">{r.name}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold
+                        ${r.status === 'active'
+                          ? 'bg-primary-100 text-primary-700'
+                          : 'bg-gray-200 text-gray-500'}
+                      `}>
+                        {r.status === 'active' ? '활성' : '취소'}
+                      </span>
+                    </div>
+                    <div className="text-dynamic-sm text-gray-500 mt-1">
+                      {formatPhone(r.phone)} · {formatTimeSlot(r.hourSlot, r.minuteSlot)} · {r.category}
+                    </div>
                   </div>
-                  <div className="text-dynamic-sm text-gray-500 mt-1">
-                    {formatPhone(r.phone)} · {formatTimeSlot(r.hourSlot, r.minuteSlot)} · {r.category}
-                  </div>
+                  {r.status === 'active' && (
+                    <button
+                      onClick={() => handleCancel(r)}
+                      disabled={cancellingId === r.id}
+                      className="ml-3 shrink-0 rounded-lg bg-red-500 px-4 py-2 text-dynamic-sm text-white font-bold
+                        hover:bg-red-600 disabled:bg-gray-300 min-h-[40px] transition-colors"
+                    >
+                      {cancellingId === r.id ? '취소 중...' : '취소'}
+                    </button>
+                  )}
                 </div>
                 {r.status === 'active' && (
-                  <button
-                    onClick={() => handleCancel(r)}
-                    disabled={cancellingId === r.id}
-                    className="ml-3 shrink-0 rounded-lg bg-red-500 px-4 py-2 text-dynamic-sm text-white font-bold
-                      hover:bg-red-600 disabled:bg-gray-300 min-h-[40px] transition-colors"
-                  >
-                    {cancellingId === r.id ? '취소 중...' : '취소'}
-                  </button>
+                  <div className="flex gap-1.5 mt-3">
+                    {(['대기중', '상담중', '상담종료'] as ConsultStatus[]).map((s) => {
+                      const isActive = r.consultStatus === s;
+                      const colorMap: Record<ConsultStatus, string> = {
+                        '대기중': isActive
+                          ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100',
+                        '상담중': isActive
+                          ? 'bg-blue-100 text-blue-700 border-blue-300'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100',
+                        '상담종료': isActive
+                          ? 'bg-green-100 text-green-700 border-green-300'
+                          : 'bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100',
+                      };
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => handleConsultStatus(r, s)}
+                          disabled={updatingConsultId === r.id}
+                          className={`rounded-lg border px-3 py-1.5 text-xs font-bold transition-colors
+                            disabled:opacity-50 ${colorMap[s]}`}
+                        >
+                          {s}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             ))}

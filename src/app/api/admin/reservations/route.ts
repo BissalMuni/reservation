@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
         minuteSlot: r.minute_slot,
         category: r.category,
         status: r.status,
+        consultStatus: r.consult_status || '대기중',
         createdAt: r.created_at,
       })),
       summary: {
