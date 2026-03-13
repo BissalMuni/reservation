@@ -3,7 +3,7 @@ export const EVENT_INFO = {
   name: '현장밀착 열린 세금상담회',
   organizer: '강남구청 / 한국세무사회',
   location: '강남구민회관',
-  date: '2026-03-12',
+  date: '2026-03-13',
   dateDisplay: '2026년 3월 12일 (목)',
   timeRange: '오후 4시 ~ 오후 6시',
 } as const;
